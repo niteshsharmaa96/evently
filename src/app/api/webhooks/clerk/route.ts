@@ -5,7 +5,7 @@ import { createUser, deleteUser, updateUser } from "@/lib/actions/user.actions";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
+  // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -50,14 +50,14 @@ export async function POST(req: Request) {
     });
   }
 
-  // Do something with the payload
-  // For this guide, you simply log the payload to the console
-  const { id } = evt.data;
+  // Get the ID and type
+  // const { id } = evt.data;
   const eventType = evt.type;
 
   if (eventType === "user.created") {
     const { id, email_addresses, image_url, first_name, last_name, username } =
       evt.data;
+
     const user = {
       clerkId: id,
       email: email_addresses[0].email_address,
@@ -66,7 +66,9 @@ export async function POST(req: Request) {
       lastName: last_name!,
       photo: image_url,
     };
+
     const newUser = await createUser(user);
+
     if (newUser) {
       await clerkClient.users.updateUserMetadata(id, {
         publicMetadata: {
@@ -75,7 +77,7 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ message: "Ok", user: newUser });
+    return NextResponse.json({ message: "OK", user: newUser });
   }
 
   if (eventType === "user.updated") {
